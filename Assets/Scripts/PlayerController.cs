@@ -1,23 +1,18 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[System.Serializable]
-public class Boundary : System.Object {
-	public float xMin;
-	public float xMax;
-	public float zMin;
-	public float zMax;
-}
-
 public class PlayerController : MonoBehaviour {
 
 	private Rigidbody rb;
 
-	public Boundary boundary;
+	public Transform boundary;
+
 	public float speed;
 	public float tilt;
+
 	public GameObject shot;
 	public Transform shotSpawn;
+
 	public float nextFire = 0.0f;
 	public float fireRate = 0.5f;
 
@@ -41,11 +36,15 @@ public class PlayerController : MonoBehaviour {
 		rb.velocity = speed * new Vector3 (mh, 0.0f, mv);
 		rb.rotation = Quaternion.Euler (tilt / 4 * rb.velocity.z, 0.0f, -1 * tilt * rb.velocity.x);
 
-		rb.position = new Vector3 (
-			Mathf.Clamp (rb.position.x, boundary.xMin, boundary.xMax),
-			0.0f,
-			Mathf.Clamp (rb.position.z, boundary.zMin, boundary.zMax)
-		);
+		float sx = boundary.localScale.x / 2;
+		float sy = boundary.localScale.y  / 2;
+		float sz = boundary.localScale.z / 2;
+
+		float x = Mathf.Clamp (rb.position.x, boundary.position.x - sx, boundary.position.x + sx);
+		float y = Mathf.Clamp (rb.position.y, boundary.position.y - sy, boundary.position.z + sy);
+		float z = Mathf.Clamp (rb.position.z, boundary.position.z - sz, boundary.position.z + sz);
+
+		rb.position = new Vector3 (x, y, z);
 	}
 
 	void LateUpdate() {

@@ -14,6 +14,7 @@ public class Destroyer : MonoBehaviour {
 	}
 
 	void OnTriggerExit(Collider other) {
+		Debug.Log ("Destroying: " + other.name);
 		Destroy (other.gameObject);
 	}
 }

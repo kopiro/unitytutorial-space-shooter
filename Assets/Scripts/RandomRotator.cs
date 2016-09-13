@@ -9,11 +9,11 @@ public class RandomRotator : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		RenderBuffer = GetComponent<Rigidbody> ();
+		rb = GetComponent<Rigidbody> ();
+		rb.angularVelocity = new Vector3 (Random.value, Random.value, Random.value) * tumble;
 	}
-	
-	// Update is called once per frame
-	void Update () {
-	
+
+	void Update() {
 	}
+
 }
