@@ -7,15 +7,14 @@ public class PlayerController : MonoBehaviour {
 
 	public Transform boundary;
 
-	public float speed;
-	public float tilt;
-
-	public GameObject shot;
-	public Transform shotSpawn;
+	public float speed = 10;
+	public float tilt = 3;
 
 	public float nextFire = 0.0f;
 	public float fireRate = 0.5f;
 
+	public GameObject shot;
+	public Transform shotSpawn;
 
 	// Use this for initialization
 	void Start () {
@@ -47,8 +46,5 @@ public class PlayerController : MonoBehaviour {
 		rb.position = new Vector3 (x, y, z);
 	}
 
-	void LateUpdate() {
-		
-	}
 
 }

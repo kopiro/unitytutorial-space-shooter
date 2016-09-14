@@ -17,7 +17,7 @@ public class DestroyOnContact : MonoBehaviour {
 	}
 		
 	void OnTriggerEnter(Collider other) {
-		Debug.Log ("Contact with " + other.name);
+		Debug.Log ("Contact of " + this.name + " with " + other.name);
 		if (other.CompareTag ("Boundary"))
 			return;
 
@@ -26,6 +26,15 @@ public class DestroyOnContact : MonoBehaviour {
 		} else {
 			Instantiate (explosion, transform.position, transform.rotation);
 		}
+
+		if (other.CompareTag("Enemy")) {
+			return;
+		}
+
+		if (other.CompareTag ("Bolt")) {
+			GameController.Instance.AddPoint ();
+		}
+
 
 		Destroy (other.gameObject);
 		Destroy (this.gameObject);
