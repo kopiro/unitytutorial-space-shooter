@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public class PlayerController : MonoBehaviour {
@@ -6,6 +7,9 @@ public class PlayerController : MonoBehaviour {
 	private Rigidbody rb;
 
 	public Transform boundary;
+
+	public GameObject explosion; 
+	public GameObject explosionPlayer; 
 
 	public float speed = 10;
 	public float tilt = 3;
@@ -15,6 +19,10 @@ public class PlayerController : MonoBehaviour {
 
 	public GameObject shot;
 	public Transform shotSpawn;
+
+	public Text UILabelLife;
+
+	private float life = 100;
 
 	// Use this for initialization
 	void Start () {
@@ -32,7 +40,7 @@ public class PlayerController : MonoBehaviour {
 		float mh = Input.GetAxis ("Horizontal");
 		float mv = Input.GetAxis ("Vertical");
 
-		rb.velocity = speed * new Vector3 (mh, 0.0f, mv);
+		rb.velocity = speed * new Vector3 (mh, 0.0f, 0.0f);
 		rb.rotation = Quaternion.Euler (tilt / 4 * rb.velocity.z, 0.0f, -1 * tilt * rb.velocity.x);
 
 		float sx = boundary.localScale.x / 2;
@@ -44,6 +52,29 @@ public class PlayerController : MonoBehaviour {
 		float z = Mathf.Clamp (rb.position.z, boundary.position.z - sz, boundary.position.z + sz);
 
 		rb.position = new Vector3 (x, y, z);
+	}
+
+	void OnTriggerEnter(Collider other) {
+		if (this.CompareTag ("Boundary")) {
+			return;
+		}
+
+		if (other.CompareTag ("BoltEnemy")) {
+			this.life--;
+			Instantiate (explosion, other.transform.position, other.transform.rotation);
+			Destroy (other.gameObject);
+		} else if (other.CompareTag ("Hazard")) {
+			this.life--;
+			Instantiate (explosion, other.transform.position, other.transform.rotation);
+			Destroy (other.gameObject);
+		}
+
+		UILabelLife.text = this.life.ToString();
+
+		if (this.life <= 0) {
+			Instantiate (explosionPlayer, this.transform.position, this.transform.rotation);
+			Destroy (this.gameObject);
+		}
 	}
 
 

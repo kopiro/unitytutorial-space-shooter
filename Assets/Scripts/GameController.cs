@@ -34,7 +34,7 @@ public class GameController : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		this.waveRoutine = SpawnWaves ();
-		StartCoroutine (this.waveRoutine);
+		// StartCoroutine (this.waveRoutine);
 	}
 
 	IEnumerator SpawnWaves() {
@@ -54,7 +54,6 @@ public class GameController : MonoBehaviour {
 
 	public void AddPoint() {
 		this.points++;
-		Debug.Log ("Add points = " + this.points);
 
 		if (this.points == pointsToWakeEnemy) {
 			this.SpawnEnemy ();
