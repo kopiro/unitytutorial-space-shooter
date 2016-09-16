@@ -1,19 +1,18 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public class GameController : MonoBehaviour {
 
-	public GameObject[] hazards;
 	public Transform boundary;
-	public GameObject enemy;
 
+	public GameObject[] hazards;
 	public float hazardStartWait = 1;
 	public float hazardWait = 0.04f;
 	public float hazardCycleWait = 3;
 	public int hazardCount = 10;
 	public int pointsToWakeEnemy = 5;
 
-	private int points = 0;
 	private IEnumerator waveRoutine;
 
 	private static GameController instance;
@@ -33,8 +32,6 @@ public class GameController : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		this.waveRoutine = SpawnWaves ();
-		// StartCoroutine (this.waveRoutine);
 	}
 
 	IEnumerator SpawnWaves() {
@@ -51,18 +48,6 @@ public class GameController : MonoBehaviour {
 			yield return new WaitForSeconds(Random.Range(0, hazardCycleWait));
 		}
 	}
-
-	public void AddPoint() {
-		this.points++;
-
-		if (this.points == pointsToWakeEnemy) {
-			this.SpawnEnemy ();
-		}
-	}
-
-	public void SpawnEnemy() {
-		StopCoroutine (this.waveRoutine);
-		Instantiate (enemy);
-	}
+		
 
 }

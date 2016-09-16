@@ -11,11 +11,11 @@ public class PlayerController : MonoBehaviour {
 	public GameObject explosion; 
 	public GameObject explosionPlayer; 
 
-	public float speed = 10;
-	public float tilt = 3;
+	private float speed = 10;
+	private float tilt = 3;
 
-	public float nextFire = 0.0f;
-	public float fireRate = 0.5f;
+	private float nextFire = 0.0f;
+	private float fireRate = 0.1f;
 
 	public GameObject shot;
 	public Transform shotSpawn;
@@ -38,7 +38,6 @@ public class PlayerController : MonoBehaviour {
 
 	void FixedUpdate() {
 		float mh = Input.GetAxis ("Horizontal");
-		float mv = Input.GetAxis ("Vertical");
 
 		rb.velocity = speed * new Vector3 (mh, 0.0f, 0.0f);
 		rb.rotation = Quaternion.Euler (tilt / 4 * rb.velocity.z, 0.0f, -1 * tilt * rb.velocity.x);

@@ -7,6 +7,8 @@ public class EnemyController : MonoBehaviour {
 	public GameObject explosion; 
 	public GameObject explosionEnemy;
 
+	public GameObject player;
+
 	public Transform boundary;	 
 
 	private Rigidbody rb;
@@ -17,115 +19,96 @@ public class EnemyController : MonoBehaviour {
 
 	public Text UILabelLife;
 
-	public float speed = 10;
-	public float tilt = 20;
-	public float nextFire = 0.0f;
-	public float fireRate = 0.5f;
-	public float smooth = 0.5f;
+	private float tilt = 2;
+
+	private float nextFire = 2.0f;
+	private float maxFireRate = 0.1f;
+
+	private float smooth = 0.3f;
 
 	private Vector3 pointToAvoid;
 
 	private float life = 100;
 
-	public float avoidX = Random.Range (2.0f, 5.0f);
-	public float minDist = Random.Range(1.0f, 2.0f);
+	private float avoidX = 2.0f;
+	private float minDist = 1.0f;
 
 	// Use this for initialization
 	void Start () {
-		this.rb = this.GetComponent<Rigidbody> ();
-		this.CalculateNewTargetPoint ();
+		rb = this.GetComponent<Rigidbody> ();
 	}
 
 	void FixedUpdate () {
+		transform.position = Vector3.SmoothDamp (transform.position, targetPoint, ref speedVector, smooth);
+		rb.rotation = Quaternion.Euler (tilt / 4 * speedVector.z, 180, -1 * tilt * speedVector.x);
 
-		Vector3 diff = this.transform.position - this.targetPoint;
-		if (Mathf.Abs (diff.x) < 1 && Mathf.Abs (diff.z) < 1) {
-			this.CalculateNewTargetPoint ();
-			return;
+		ProcessFire ();
+
+		CalculateNewTargetPoint ();
+	}
+
+	void ProcessFire() {
+		float dist = Mathf.Abs (player.transform.position.x - transform.position.x);
+		if (Time.time > nextFire && dist < minDist) {
+			nextFire = Time.time + Random.Range (0.0f, 0.1f + (maxFireRate * ( dist / minDist )));
+			Instantiate (shot, transform.position, transform.rotation);
 		}
-
-		// Move
-		this.transform.position = Vector3.SmoothDamp (
-			this.transform.position,
-			this.targetPoint,
-			ref speedVector,
-			this.smooth
-		);
-		this.rb.rotation = Quaternion.Euler (
-			tilt / 4 * speedVector.z, 
-			180,
-			-1 * tilt * speedVector.x
-		);
-
-		// Fire
-		if (Time.time > nextFire) {
-			nextFire = Time.time + fireRate + Random.Range (0, 0.2f);
-			Instantiate (shot, this.transform.position, this.transform.rotation);
-		}
-		
 	}
 
 	void CalculateNewTargetPoint() {
-		float w = boundary.position.x + boundary.localScale.x / 2;
-		float z = boundary.position.z + boundary.localScale.z / 2;
+		float maxZ = boundary.position.z + boundary.localScale.z / 2;
 
-		this.targetPoint = new Vector3 (
-			Random.Range(w, -w), 
-			this.transform.position.y, 
-			z + Random.Range(-2,2)
+		targetPoint = new Vector3 (
+			player.transform.position.x, 
+			transform.position.y, 
+			maxZ + Random.Range(-2.0f,2.0f)
 		);
 	}
 
 	void OnTriggerEnter(Collider other) {
 		Debug.Log ("EnemyContoller.OnTriggerEnter = " + other.name);
 
-		if (this.CompareTag ("Boundary")) {
+		if (CompareTag ("Boundary")) {
 			return;
 		}
 
 		if (other.CompareTag("Bolt")) {
-			this.life--;
+			life--;
 			Instantiate (explosion, other.transform.position, other.transform.rotation);
 			Destroy (other.gameObject);
-		} else if (other.CompareTag ("Hazard")) {
-			this.life--;
-			Instantiate (explosion, other.transform.position, other.transform.rotation);
-			Destroy (other.gameObject);
-		}
+		} 
 
-		UILabelLife.text = this.life.ToString();
+		UILabelLife.text = life.ToString();
 
-		if (this.life <= 0) {
+		if (life <= 0) {
 			Instantiate (explosionEnemy, other.transform.position, other.transform.rotation);
-			Destroy(this.gameObject);
+			Destroy(gameObject);
 		}
 	}
 
 
 	public void boltIsColliding(Vector3 pointToAvoid) {
-		float w = boundary.position.x + boundary.localScale.x / 2;
-
-	
+		float xMax = boundary.position.x + boundary.localScale.x / 2;
 
 		float newX;
 		float xLeft = pointToAvoid.x - avoidX;
 		float xRight = pointToAvoid.x + avoidX;
 
-		if (this.transform.position.x - pointToAvoid.x < minDist) {
+		if (transform.position.x - pointToAvoid.x < minDist) {
 			newX = xLeft;
-		} else if (this.transform.position.x - pointToAvoid.x > -minDist) {
+		} else if (transform.position.x - pointToAvoid.x > -minDist) {
 			newX = xRight;
 		} else {
 			return;
 		}
 
-		if (newX >= w) {
+		if (newX >= xMax) {
 			newX = xLeft;
-		} else if (newX <= -w) {
+		} else if (newX <= -xMax) {
 			newX = xRight;
 		} 
 
-		this.targetPoint.Set (newX, this.targetPoint.y, this.targetPoint.z);
+		targetPoint.Set (newX, targetPoint.y, targetPoint.z);
 	}
 
 }
