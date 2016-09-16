@@ -6,6 +6,8 @@ public class HazardMover : MonoBehaviour {
 	public float speed = 10;
 	public float tumble = 4;
 
+	private int life = 5;
+
 	public GameObject explosion; 
 
 	private Rigidbody rb;
@@ -14,8 +16,7 @@ public class HazardMover : MonoBehaviour {
 	void Start () {
 		rb = GetComponent<Rigidbody> ();
 
-		this.transform.localScale *= Random.Range (0.2f, 1.5f);
-		rb.velocity = -1 * Random.Range(0.3f, 1.0f) * speed * transform.forward;
+		rb.velocity = Random.Range(0.3f, 1.0f) * speed * transform.forward;
 		rb.angularVelocity = tumble * new Vector3 (Random.value, Random.value, Random.value);
 	}
 	
@@ -27,7 +28,13 @@ public class HazardMover : MonoBehaviour {
 	void OnTriggerEnter(Collider other) {
 		if (other.CompareTag ("Hazard")) {
 			Instantiate (explosion, transform.position, transform.rotation);
-			Destroy (this.gameObject);
-		}
+			Destroy (gameObject);
+		} else if (other.CompareTag ("Bolt")) {
+			GameObject o = Instantiate (explosion, transform.position, transform.rotation) as GameObject;
+			o.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+			if (life-- <= 0) {
+				Destroy (gameObject);
+			}
+		} 
 	}
 }

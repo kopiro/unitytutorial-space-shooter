@@ -63,7 +63,7 @@ public class PlayerController : MonoBehaviour {
 			Instantiate (explosion, other.transform.position, other.transform.rotation);
 			Destroy (other.gameObject);
 		} else if (other.CompareTag ("Hazard")) {
-			this.life--;
+			this.life -= 10;
 			Instantiate (explosion, other.transform.position, other.transform.rotation);
 			Destroy (other.gameObject);
 		}
