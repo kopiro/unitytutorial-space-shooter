@@ -9,7 +9,6 @@ public class Destroyer : MonoBehaviour {
 		if (other.CompareTag ("Enemy"))
 			return;
 		
-		Debug.Log ("Destroying for boundary exit: " + other.name);
 		Destroy (other.gameObject);
 	}
 }

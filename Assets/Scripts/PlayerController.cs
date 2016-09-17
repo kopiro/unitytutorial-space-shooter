@@ -16,6 +16,7 @@ public class PlayerController : MonoBehaviour {
 
 	private float nextFire = 0.0f;
 	private float fireRate = 0.1f;
+	private float currentFireRate = 0;
 
 	public GameObject shot;
 	public Transform shotSpawn;
@@ -28,11 +29,15 @@ public class PlayerController : MonoBehaviour {
 	void Start () {
 		rb = GetComponent<Rigidbody> ();
 	}
-	
+
 	void Update () {
-		if ((Input.GetButton("Fire1") || Input.GetKey(KeyCode.Space)) && Time.time > nextFire) {
+		Debug.Log (currentFireRate);
+		if ((Input.GetButton ("Fire1") || Input.GetKey (KeyCode.Space)) && Time.time > nextFire && currentFireRate < 10.0f) {
 			nextFire = Time.time + fireRate;
+			currentFireRate += 1.0f;
 			Instantiate (shot, shotSpawn.position, shotSpawn.rotation);
+		} else {
+			currentFireRate = Mathf.Max (0, currentFireRate - 0.1f);
 		}
 	}
 

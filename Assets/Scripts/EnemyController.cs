@@ -16,30 +16,30 @@ public class EnemyController : MonoBehaviour {
 	private Vector3 speedVector = Vector3.zero;
 
 	public GameObject shot;
-	public GameObject hazard;
-	public Transform shotSpawn;
+	public Transform shotSpawnLeft;
+	public Transform shotSpawnRight;
 
 	public Text UILabelLife;
 
 	private float tilt = 2;
 
 	private float nextFire = 2.0f;
-	private float maxFireRate = 0.1f;
+	private float fireRate = 0.1f;
+	private float currentFireRate = 0;
 
 	private float smooth = 0.3f;
 
-	private Vector3 pointBecauseOfPain;
+	private Vector3 pointToAvoidBolt;
 	private Vector3 latestBoltPoint;
+	private bool boltIsGoingToCollide = false;
 
 	private int life = 100;
 	private int prevLife = 100;
 
-	private float avoidX = 2.0f;
-	private float minDist = 1.0f;
+	private float avoidX = 4.0f;
+	private float minDist = 2.0f;
 
 	private int painFrameChecker = 0;
-	private int painDetector = 0;
-
 	private int deltaLife = 0;
 
 
@@ -57,68 +57,59 @@ public class EnemyController : MonoBehaviour {
 			prevLife = life;
 		}
 
-		process ();
+		Process ();
 		ProcessFire ();
 	}
 
-	void process() {
-		if (deltaLife > 1) {
-			EnterDefenseMode ();
-		} else {
+	void Process() {
+		if (boltIsGoingToCollide == false && deltaLife < 1) {
 			EnterAttackMode ();
+		} else {
+			EnterDefenseMode ();
 		}
+	}
+
+	float GetZ() {
+		return boundary.position.z + boundary.localScale.z / 2 - 5;
 	}
 
 	void ProcessFire() {
 		float dist = Mathf.Abs (player.transform.position.x - transform.position.x);
-		if (Time.time > nextFire && dist < minDist) {
-			nextFire = Time.time + Random.Range (0.0f, 0.2f + (maxFireRate * ( dist / minDist )));
 
-			if (Random.Range (0, 10) == 0) {
-				Instantiate (hazard, shotSpawn.position, shotSpawn.rotation);
-			} else {
-				Instantiate (shot, shotSpawn.position, shotSpawn.rotation);
-			}
+		if (Time.time > nextFire && (dist < minDist || Random.Range(0,2) == 1) && currentFireRate < 10.0f) {
+			nextFire = Time.time + fireRate + (dist / minDist);
+			currentFireRate += 1.0f;
+			Instantiate (shot, shotSpawnLeft.position, shotSpawnLeft.rotation);
+			Instantiate (shot, shotSpawnRight.position, shotSpawnRight.rotation);
+		} else {
+			currentFireRate = Mathf.Max (0, currentFireRate - 0.1f);
 		}
 	}
 
 	void EnterAttackMode() {
-		Debug.Log ("ATTACHKK!");
-		float maxZ = boundary.position.z + boundary.localScale.z / 2;
-
-		if (latestBoltPoint != null && Mathf.Abs (player.transform.position.x - latestBoltPoint.x) < 2) {
-			EnterDefenseMode ();
-		} else {
-
-			targetPoint = new Vector3 (
-				player.transform.position.x, 
-				transform.position.y, 
-				maxZ
-			);
-
-		}
+		targetPoint = new Vector3 (
+			player.transform.position.x, 
+			transform.position.y, 
+			GetZ()
+		);
 	}
 
 	void EnterDefenseMode() {
-		Debug.Log ("DEFNSE");
-		float maxZ = boundary.position.z + boundary.localScale.z / 2;
-
 		targetPoint = new Vector3 (
-			pointBecauseOfPain.x, 
+			pointToAvoidBolt.x, 
 			transform.position.y, 
-			maxZ
+			GetZ()
 		);
 	}
 
 	void OnTriggerEnter(Collider other) {
-		Debug.Log ("EnemyContoller.OnTriggerEnter = " + other.name);
-
 		if (CompareTag ("Boundary")) {
 			return;
 		}
 
 		if (other.CompareTag("Bolt")) {
 			life--;
+			boltIsGoingToCollide = false;
 			Instantiate (explosion, other.transform.position, other.transform.rotation);
 			Destroy (other.gameObject);
 		} 
@@ -133,28 +124,23 @@ public class EnemyController : MonoBehaviour {
 
 
 	public void boltIsColliding(Vector3 p) {
-		latestBoltPoint = p;
+		boltIsGoingToCollide = true;
+
 		float xMax = boundary.position.x + boundary.localScale.x / 2;
 
-		float newX;
-		float xLeft = p.x - avoidX;
-		float xRight = p.x + avoidX;
+		ArrayList choicesX = new ArrayList ();
 
-		if (transform.position.x - p.x < minDist) {
-			newX = xLeft;
-		} else if (transform.position.x - p.x > -minDist) {
-			newX = xRight;
-		} else {
-			return;
-		}
+		if (transform.position.x - p.x < minDist && (p.x - avoidX) > -xMax) choicesX.Add (p.x - avoidX);
+		if (transform.position.x - p.x > -minDist && (p.x + avoidX) < xMax) choicesX.Add (p.x + avoidX);
+	
+		if (choicesX.Count == 0) return;
+		float x = (float)choicesX [Random.Range (0, choicesX.Count)];
+	
+		pointToAvoidBolt = new Vector3(x, transform.position.y, transform.position.z);
+	}
 
-		if (newX >= xMax) {
-			newX = xLeft;
-		} else if (newX <= -xMax) {
-			newX = xRight;
-		} 
-
-		pointBecauseOfPain = new Vector3(newX, transform.position.y, transform.position.z);
+	public void boltIsGoingOut() {
+		boltIsGoingToCollide = false;
 	}
 
 }
