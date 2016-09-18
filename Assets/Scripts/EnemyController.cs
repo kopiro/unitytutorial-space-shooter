@@ -27,6 +27,7 @@ public class EnemyController : MonoBehaviour {
 	private float fireRate = 0.1f;
 	private float currentFireRate = 0;
 
+	// Difficulty here
 	private float smooth = 0.3f;
 
 	private Vector3 pointToAvoidBolt;
