@@ -11,6 +11,15 @@ public class PlayerController : MonoBehaviour {
 	public GameObject explosion; 
 	public GameObject explosionPlayer; 
 
+	public GameObject engine;
+
+	public Transform rotorLeft;
+	public Transform rotorRight;
+
+	public Transform cam;
+	private Vector3 cameraOffset;
+
+	private float rotation = 0;
 	private float speed = 10;
 	private float tilt = 3;
 
@@ -28,11 +37,11 @@ public class PlayerController : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		rb = GetComponent<Rigidbody> ();
+		cameraOffset = transform.position - cam.position;
 	}
 
 	void Update () {
-		Debug.Log (currentFireRate);
-		if ((Input.GetButton ("Fire1") || Input.GetKey (KeyCode.Space)) && Time.time > nextFire && currentFireRate < 10.0f) {
+		if (Input.GetButton ("Fire1") && Time.time > nextFire && currentFireRate < 10.0f) {
 			nextFire = Time.time + fireRate;
 			currentFireRate += 1.0f;
 			Instantiate (shot, shotSpawn.position, shotSpawn.rotation);
@@ -42,20 +51,43 @@ public class PlayerController : MonoBehaviour {
 	}
 
 	void FixedUpdate() {
-		float mh = Input.GetAxis ("Horizontal");
+		bool engineActive = false;
 
-		rb.velocity = speed * new Vector3 (mh, 0.0f, 0.0f);
-		rb.rotation = Quaternion.Euler (tilt / 4 * rb.velocity.z, 0.0f, -1 * tilt * rb.velocity.x);
+		if (Input.GetKey (KeyCode.W)) {
+			engineActive = true;
+			rb.AddRelativeForce (new Vector3 (0.0f, 14.0f, 0.0f), ForceMode.Acceleration);
+		}
 
-		float sx = boundary.localScale.x / 2;
-		float sy = boundary.localScale.y  / 2;
-		float sz = boundary.localScale.z / 2;
+		if (Input.GetKey (KeyCode.S)) {
+			engineActive = true;
+			rb.AddRelativeForce (new Vector3 (0.0f, -14.0f, 0.0f), ForceMode.Acceleration);
+		}
 
-		float x = Mathf.Clamp (rb.position.x, boundary.position.x - sx, boundary.position.x + sx);
-		float y = Mathf.Clamp (rb.position.y, boundary.position.y - sy, boundary.position.z + sy);
-		float z = Mathf.Clamp (rb.position.z, boundary.position.z - sz, boundary.position.z + sz);
+		if (Input.GetKey (KeyCode.Space)) {
+			engineActive = true;
+			rb.AddRelativeForce (new Vector3 (0, 0, 10.0f), ForceMode.Acceleration);
+		}
 
-		rb.position = new Vector3 (x, y, z);
+		if (Input.GetKey (KeyCode.A)) {
+			rotation -= 1.0f;
+		}
+
+		if (Input.GetKey (KeyCode.D)) {
+			rotation += 1.0f;
+		}
+
+		rb.rotation = Quaternion.Euler (0.0f, rotation, 0.0f);
+
+
+		engine.SetActive (engineActive);
+
+			
+		//float x = Mathf.Clamp (rb.position.x, boundary.position.x - (boundary.localScale.x / 2), boundary.position.x + (boundary.localScale.x / 2));
+		//float y = Mathf.Clamp (rb.position.y, boundary.position.y - (boundary.localScale.y / 2), boundary.position.z + (boundary.localScale.y / 2));
+		//float z = Mathf.Clamp (rb.position.z, boundary.position.z - (boundary.localScale.z / 2), boundary.position.z + (boundary.localScale.z / 2));
+		//rb.position = new Vector3 (x, y, z);
+		//cam.position = Vector3.Lerp (cam.position, transform.position, 6.0f);
+		//cam.rotation = Quaternion.Lerp(cam.rotation, transform.rotation, 6.0f);
 	}
 
 	void OnTriggerEnter(Collider other) {
