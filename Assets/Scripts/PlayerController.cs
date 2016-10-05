@@ -11,15 +11,14 @@ public class PlayerController : MonoBehaviour {
 	public GameObject explosion; 
 	public GameObject explosionPlayer; 
 
-	public GameObject engine;
-
-	public Transform rotorLeft;
-	public Transform rotorRight;
+	public Transform engineLeft;
+	public Transform engineRight;
+	public Transform engineCenter;
 
 	public Transform cam;
 	private Vector3 cameraOffset;
 
-	private float rotation = 0;
+	private Vector3 rotation = Vector3.zero;
 	private float speed = 10;
 	private float tilt = 3;
 
@@ -41,7 +40,7 @@ public class PlayerController : MonoBehaviour {
 	}
 
 	void Update () {
-		if (Input.GetButton ("Fire1") && Time.time > nextFire && currentFireRate < 10.0f) {
+		if (Input.GetKey(KeyCode.JoystickButton16)  && Time.time > nextFire && currentFireRate < 10.0f) {
 			nextFire = Time.time + fireRate;
 			currentFireRate += 1.0f;
 			Instantiate (shot, shotSpawn.position, shotSpawn.rotation);
@@ -51,43 +50,34 @@ public class PlayerController : MonoBehaviour {
 	}
 
 	void FixedUpdate() {
-		bool engineActive = false;
-
-		if (Input.GetKey (KeyCode.W)) {
-			engineActive = true;
-			rb.AddRelativeForce (new Vector3 (0.0f, 14.0f, 0.0f), ForceMode.Acceleration);
-		}
-
-		if (Input.GetKey (KeyCode.S)) {
-			engineActive = true;
-			rb.AddRelativeForce (new Vector3 (0.0f, -14.0f, 0.0f), ForceMode.Acceleration);
-		}
-
-		if (Input.GetKey (KeyCode.Space)) {
-			engineActive = true;
-			rb.AddRelativeForce (new Vector3 (0, 0, 10.0f), ForceMode.Acceleration);
-		}
-
-		if (Input.GetKey (KeyCode.A)) {
-			rotation -= 1.0f;
-		}
-
-		if (Input.GetKey (KeyCode.D)) {
-			rotation += 1.0f;
-		}
-
-		rb.rotation = Quaternion.Euler (0.0f, rotation, 0.0f);
-
-
-		engine.SetActive (engineActive);
-
+		Debug.Log (Input.GetAxis ("Vertical"));
+		rb.AddRelativeForce (new Vector3 (0.0f, (rb.mass * 10.0f * 10.0f) * (0.5f * (1.0f + Input.GetAxis("Vertical"))), 0.0f));
 			
-		//float x = Mathf.Clamp (rb.position.x, boundary.position.x - (boundary.localScale.x / 2), boundary.position.x + (boundary.localScale.x / 2));
-		//float y = Mathf.Clamp (rb.position.y, boundary.position.y - (boundary.localScale.y / 2), boundary.position.z + (boundary.localScale.y / 2));
-		//float z = Mathf.Clamp (rb.position.z, boundary.position.z - (boundary.localScale.z / 2), boundary.position.z + (boundary.localScale.z / 2));
-		//rb.position = new Vector3 (x, y, z);
-		//cam.position = Vector3.Lerp (cam.position, transform.position, 6.0f);
-		//cam.rotation = Quaternion.Lerp(cam.rotation, transform.rotation, 6.0f);
+		Debug.Log (Input.GetAxis ("Accelerator"));
+		if (Input.GetAxis ("Accelerator") > 0) {
+			engineCenter.GetComponent<EngineController> ().StartThrust ( Input.GetAxis ("Accelerator") );
+		} else {
+			engineCenter.GetComponent<EngineController> ().StopThrust ();
+		}
+							
+		if (Input.GetAxis ("Horizontal") > 0) {
+			engineRight.GetComponent<EngineController> ().StartThrust ( Mathf.Abs(Input.GetAxis ("Horizontal")) );
+			engineLeft.GetComponent<EngineController> ().StopThrust ();
+		} else if (Input.GetAxis ("Horizontal") < 0) {
+			engineLeft.GetComponent<EngineController> ().StartThrust ( Mathf.Abs(Input.GetAxis ("Horizontal")) );
+			engineRight.GetComponent<EngineController> ().StopThrust ();
+		} else {
+			engineLeft.GetComponent<EngineController> ().StopThrust ();
+			engineRight.GetComponent<EngineController> ().StopThrust ();
+		}
+
+		rb.rotation = Quaternion.Lerp (rb.rotation, Quaternion.Euler (0.0f, rb.rotation.eulerAngles.y, 0.0f), 50.0f);
+			
+		rb.velocity *= 0.98f;
+
+		cam.transform.position = Vector3.Lerp (cam.transform.position, transform.position - cameraOffset, 100.0f);
+		cam.transform.rotation = Quaternion.Euler (0.0f, transform.rotation.eulerAngles.y, 0.0f);
+
 	}
 
 	void OnTriggerEnter(Collider other) {

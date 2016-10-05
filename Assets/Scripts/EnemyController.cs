@@ -50,8 +50,6 @@ public class EnemyController : MonoBehaviour {
 	}
 
 	void FixedUpdate () {
-		return; 
-
 		transform.position = Vector3.SmoothDamp (transform.position, targetPoint, ref speedVector, smooth);
 		rb.rotation = Quaternion.Euler (tilt / 4 * speedVector.z, 180, -1 * tilt * speedVector.x);
 
@@ -70,6 +68,14 @@ public class EnemyController : MonoBehaviour {
 		} else {
 			EnterDefenseMode ();
 		}
+	}
+
+	float GetX() {
+		return player.transform.position.x;
+	}
+
+	float GetY() {
+		return player.transform.position.y;
 	}
 
 	float GetZ() {
@@ -91,8 +97,8 @@ public class EnemyController : MonoBehaviour {
 
 	void EnterAttackMode() {
 		targetPoint = new Vector3 (
-			player.transform.position.x, 
-			transform.position.y, 
+			GetX(), 
+			GetY(), 
 			GetZ()
 		);
 	}
