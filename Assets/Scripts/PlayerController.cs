@@ -11,16 +11,18 @@ public class PlayerController : MonoBehaviour {
 	public GameObject explosion; 
 	public GameObject explosionPlayer; 
 
-	public Transform engineLeft;
-	public Transform engineRight;
 	public Transform engineCenter;
+	public Transform engineBottom;
 
 	public Transform cam;
 	private Vector3 cameraOffset;
+	private Vector3 cameraOffsetRotation;
 
 	private Vector3 rotation = Vector3.zero;
 	private float speed = 10;
 	private float tilt = 3;
+
+	private float xRotation = 0;
 
 	private float nextFire = 0.0f;
 	private float fireRate = 0.1f;
@@ -36,7 +38,7 @@ public class PlayerController : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		rb = GetComponent<Rigidbody> ();
-		cameraOffset = transform.position - cam.position;
+		cameraOffset = cam.transform.position - transform.position;
 	}
 
 	void Update () {
@@ -50,34 +52,27 @@ public class PlayerController : MonoBehaviour {
 	}
 
 	void FixedUpdate() {
-		Debug.Log (Input.GetAxis ("Vertical"));
-		rb.AddRelativeForce (new Vector3 (0.0f, (rb.mass * 10.0f * 10.0f) * (0.5f * (1.0f + Input.GetAxis("Vertical"))), 0.0f));
-			
-		Debug.Log (Input.GetAxis ("Accelerator"));
-		if (Input.GetAxis ("Accelerator") > 0) {
-			engineCenter.GetComponent<EngineController> ().StartThrust ( Input.GetAxis ("Accelerator") );
+		if (Input.GetAxis ("R2") > 0) {
+			engineCenter.GetComponent<EngineController> ().StartThrust (Input.GetAxis ("R2"));
 		} else {
 			engineCenter.GetComponent<EngineController> ().StopThrust ();
 		}
-							
-		if (Input.GetAxis ("Horizontal") > 0) {
-			engineRight.GetComponent<EngineController> ().StartThrust ( Mathf.Abs(Input.GetAxis ("Horizontal")) );
-			engineLeft.GetComponent<EngineController> ().StopThrust ();
-		} else if (Input.GetAxis ("Horizontal") < 0) {
-			engineLeft.GetComponent<EngineController> ().StartThrust ( Mathf.Abs(Input.GetAxis ("Horizontal")) );
-			engineRight.GetComponent<EngineController> ().StopThrust ();
+
+		if (Input.GetAxis ("L2") > 0) {
+			engineBottom.GetComponent<EngineController> ().StartThrust (Input.GetAxis ("L2"), Vector3.up);
 		} else {
-			engineLeft.GetComponent<EngineController> ().StopThrust ();
-			engineRight.GetComponent<EngineController> ().StopThrust ();
+			engineBottom.GetComponent<EngineController> ().StopThrust ();
 		}
-
-		rb.rotation = Quaternion.Lerp (rb.rotation, Quaternion.Euler (0.0f, rb.rotation.eulerAngles.y, 0.0f), 50.0f);
 			
-		rb.velocity *= 0.98f;
+		float newYR = transform.rotation.eulerAngles.y + (Input.GetAxis ("Horizontal"));
+		transform.rotation = Quaternion.Euler (0.0f, newYR, 0.0f);
+	}
 
-		cam.transform.position = Vector3.Lerp (cam.transform.position, transform.position - cameraOffset, 100.0f);
-		cam.transform.rotation = Quaternion.Euler (0.0f, transform.rotation.eulerAngles.y, 0.0f);
-
+	void LateUpdate() {
+		cameraOffset = Quaternion.AngleAxis (Input.GetAxis("CameraX") * 3.0f, Vector3.up) * cameraOffset;
+		cameraOffset = Quaternion.AngleAxis (Input.GetAxis("CameraY") * 3.0f, new Vector3(1,0,0)) * cameraOffset;
+		cam.transform.position = transform.position + cameraOffset;
+		cam.transform.LookAt (transform.position);
 	}
 
 	void OnTriggerEnter(Collider other) {

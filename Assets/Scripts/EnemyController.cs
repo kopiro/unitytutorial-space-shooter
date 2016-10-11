@@ -50,6 +50,8 @@ public class EnemyController : MonoBehaviour {
 	}
 
 	void FixedUpdate () {
+		return;
+
 		transform.position = Vector3.SmoothDamp (transform.position, targetPoint, ref speedVector, smooth);
 		rb.rotation = Quaternion.Euler (tilt / 4 * speedVector.z, 180, -1 * tilt * speedVector.x);
 
