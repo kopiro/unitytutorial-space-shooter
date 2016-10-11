@@ -16,13 +16,19 @@ public class PlayerController : MonoBehaviour {
 
 	public Transform cam;
 	private Vector3 cameraOffset;
-	private Vector3 cameraOffsetRotation;
 
-	private Vector3 rotation = Vector3.zero;
+	private float rot = 0;
 	private float speed = 10;
-	private float tilt = 3;
+	private float tilt = 0.1f;
 
-	private float xRotation = 0;
+	private float lerpCamTime = 0.0f;
+	private float maxLerpCamTime = 4.0f;
+
+	private float lerpRotation = 0.0f;
+	private float maxLerpRotationTime = 20.0f;
+
+	private float lerpTilt = 0.0f;
+	private float maxLerpTiltTime = 20.0f;
 
 	private float nextFire = 0.0f;
 	private float fireRate = 0.1f;
@@ -49,31 +55,39 @@ public class PlayerController : MonoBehaviour {
 		} else {
 			currentFireRate = Mathf.Max (0, currentFireRate - 0.1f);
 		}
-	}
+				}
 
 	void FixedUpdate() {
-		if (Input.GetAxis ("R2") > 0) {
-			engineCenter.GetComponent<EngineController> ().StartThrust (Input.GetAxis ("R2"));
+		if (Input.GetButton ("EngineCenter")) {
+			engineCenter.GetComponent<EngineController> ().StartThrust (1);
 		} else {
 			engineCenter.GetComponent<EngineController> ().StopThrust ();
 		}
 
-		if (Input.GetAxis ("L2") > 0) {
-			engineBottom.GetComponent<EngineController> ().StartThrust (Input.GetAxis ("L2"), Vector3.up);
+		if (Input.GetButton ("EngineBottom")) {
+			engineBottom.GetComponent<EngineController> ().StartThrust (1, transform.up);
 		} else {
 			engineBottom.GetComponent<EngineController> ().StopThrust ();
 		}
-			
-		float newYR = transform.rotation.eulerAngles.y + (Input.GetAxis ("Horizontal"));
-		transform.rotation = Quaternion.Euler (0.0f, newYR, 0.0f);
-	}
 
-	void LateUpdate() {
-		cameraOffset = Quaternion.AngleAxis (Input.GetAxis("CameraX") * 3.0f, Vector3.up) * cameraOffset;
-		cameraOffset = Quaternion.AngleAxis (Input.GetAxis("CameraY") * 3.0f, new Vector3(1,0,0)) * cameraOffset;
-		cam.transform.position = transform.position + cameraOffset;
-		cam.transform.LookAt (transform.position);
+		if (Input.GetAxis ("Horizontal") != 0.0f) {
+			rot += Input.GetAxis ("Horizontal");
+
+			tilt += -1 * Input.GetAxis ("Horizontal");
+			tilt = Mathf.Clamp (tilt, -90.0f, 90.0f);
+		}
+			
+		transform.rotation = Quaternion.Euler (0.0f, rot, tilt);
+
+		cam.transform.position = Vector3.Lerp (
+			cam.transform.position,
+			transform.position + (Quaternion.AngleAxis (rot, Vector3.up) * cameraOffset),
+			0.8f + Time.smoothDeltaTime
+		);
+		cam.transform.LookAt (transform.position + 1.0f * Vector3.up);
+
 	}
+		
 
 	void OnTriggerEnter(Collider other) {
 		if (this.CompareTag ("Boundary")) {
