@@ -6,40 +6,17 @@ public class PlayerController : MonoBehaviour {
 
 	private Rigidbody rb;
 
-	public Transform boundary;
-
 	public GameObject explosion; 
-	public GameObject explosionPlayer; 
-
-	public Transform engineCenter;
-	public Transform engineBottom;
+	public ParticleSystem engineCenter;
 
 	public Transform cam;
 	private Vector3 cameraOffset;
 
-	private float rot = 0;
-	private float speed = 10;
-	private float tilt = 0.1f;
-
-	private float lerpCamTime = 0.0f;
-	private float maxLerpCamTime = 4.0f;
-
-	private float lerpRotation = 0.0f;
-	private float maxLerpRotationTime = 20.0f;
-
-	private float lerpTilt = 0.0f;
-	private float maxLerpTiltTime = 20.0f;
+	private float accelerationCenter = 1.0f;
 
 	private float nextFire = 0.0f;
 	private float fireRate = 0.1f;
 	private float currentFireRate = 0;
-
-	public GameObject shot;
-	public Transform shotSpawn;
-
-	public Text UILabelLife;
-
-	private float life = 100;
 
 	// Use this for initialization
 	void Start () {
@@ -48,67 +25,63 @@ public class PlayerController : MonoBehaviour {
 	}
 
 	void Update () {
-		if (Input.GetKey(KeyCode.JoystickButton16)  && Time.time > nextFire && currentFireRate < 10.0f) {
-			nextFire = Time.time + fireRate;
-			currentFireRate += 1.0f;
-			Instantiate (shot, shotSpawn.position, shotSpawn.rotation);
-		} else {
-			currentFireRate = Mathf.Max (0, currentFireRate - 0.1f);
-		}
-				}
+//		if (Input.GetButton("Fire") && Time.time > nextFire && currentFireRate < 10.0f) {
+//			nextFire = Time.time + fireRate;
+//			currentFireRate += 1.0f;
+//			Instantiate (shot, shotSpawn.position, shotSpawn.rotation);
+//		} else {
+//			currentFireRate = Mathf.Max (0, currentFireRate - 0.1f);
+//		}
+	}
 
 	void FixedUpdate() {
+		Quaternion rot = transform.rotation;
+
 		if (Input.GetButton ("EngineCenter")) {
-			engineCenter.GetComponent<EngineController> ().StartThrust (1);
+			// rot = Quaternion.Euler (rot.eulerAngles.x * 0.99f, rot.eulerAngles.y, rot.eulerAngles.z);
+			rb.velocity = rb.velocity + (accelerationCenter * transform.forward);
+			engineCenter.Play ();
 		} else {
-			engineCenter.GetComponent<EngineController> ().StopThrust ();
+			engineCenter.Stop ();
 		}
 
-		if (Input.GetButton ("EngineBottom")) {
-			engineBottom.GetComponent<EngineController> ().StartThrust (1, transform.up);
-		} else {
-			engineBottom.GetComponent<EngineController> ().StopThrust ();
-		}
+		float speedForward = rb.velocity.magnitude;
+		Debug.Log (rot.eulerAngles.z);
 
-		if (Input.GetAxis ("Horizontal") != 0.0f) {
-			rot += Input.GetAxis ("Horizontal");
+		rot *= Quaternion.AngleAxis ((1.0f * Input.GetAxisRaw ("Vertical")), Vector3.right);
+		rot *= Quaternion.AngleAxis ((1.0f * Input.GetAxisRaw ("Horizontal")), Vector3.up);
+		rot *= Quaternion.AngleAxis (-(1.0f * Input.GetAxisRaw ("Horizontal")), Vector3.forward);
 
-			tilt += -1 * Input.GetAxis ("Horizontal");
-			tilt = Mathf.Clamp (tilt, -90.0f, 90.0f);
-		}
-			
-		transform.rotation = Quaternion.Euler (0.0f, rot, tilt);
+//					
+//		rot = Quaternion.Euler (
+//			Mathf.Clamp ( 
+//			(rot.eulerAngles.x >= 180 ? rot.eulerAngles.x - 360 : rot.eulerAngles.x) + 
+//			(1.0f * Input.GetAxisRaw ("Vertical")), 
+//			-80.0f, 80.0f), 
+//			rot.eulerAngles.y + ((1.0f * Input.GetAxisRaw ("Horizontal"))),
+//			Mathf.Clamp ( 
+//			(rot.eulerAngles.z >= 180 ? rot.eulerAngles.z - 360 : rot.eulerAngles.z) - 
+//			(1.0f * Input.GetAxisRaw ("Horizontal")), 
+//			-80.0f, 80.0f)
+//		);
+//
+		transform.rotation = rot;
 
-		cam.transform.position = Vector3.Lerp (
-			cam.transform.position,
-			transform.position + (Quaternion.AngleAxis (rot, Vector3.up) * cameraOffset),
-			0.8f + Time.smoothDeltaTime
+		cam.transform.position = transform.position + Quaternion.AngleAxis (rot.eulerAngles.y, Vector3.up) * cameraOffset;
+		cam.transform.LookAt (transform.position + transform.up);
+
+		Camera camComponent = cam.GetComponent<Camera> ();
+		camComponent.fieldOfView = Mathf.Lerp (
+			camComponent.fieldOfView,
+			40.0f + (speedForward * 1.0f),
+			Time.deltaTime
 		);
-		cam.transform.LookAt (transform.position + 1.0f * Vector3.up);
-
 	}
-		
 
-	void OnTriggerEnter(Collider other) {
-		if (this.CompareTag ("Boundary")) {
-			return;
-		}
-
-		if (other.CompareTag ("BoltEnemy")) {
-			this.life--;
-			Instantiate (explosion, other.transform.position, other.transform.rotation);
-			Destroy (other.gameObject);
-		} else if (other.CompareTag ("Hazard")) {
-			this.life -= 10;
-			Instantiate (explosion, other.transform.position, other.transform.rotation);
-			Destroy (other.gameObject);
-		}
-
-		UILabelLife.text = this.life.ToString();
-
-		if (this.life <= 0) {
-			Instantiate (explosionPlayer, this.transform.position, this.transform.rotation);
-			Destroy (this.gameObject);
+	void OnCollisionEnter(Collision col) {
+		if (col.gameObject.CompareTag ("Terrain")) {
+			Destroy (gameObject);
+			Instantiate (explosion, transform.position, Quaternion.identity);
 		}
 	}
 

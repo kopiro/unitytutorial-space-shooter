@@ -17,16 +17,10 @@ public class EngineController : MonoBehaviour {
 		
 	}
 
-	public void StartThrust(float ratio) {
+	public void StartThrust() {
 		particle.Play ();
-		rb.AddForceAtPosition (ratio * power * transform.forward, transform.position);
 	}
-
-	public void StartThrust(float ratio, Vector3 vec) {
-		particle.Play ();
-		rb.AddForceAtPosition (ratio * power * vec, transform.position);
-	}
-
+		
 	public void StopThrust() {
 		particle.Stop ();
 
